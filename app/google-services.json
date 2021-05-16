@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "569447044766",
+    "project_id": "lecturer-notification-system",
+    "storage_bucket": "lecturer-notification-system.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:569447044766:android:673b83a7106add47058d8f",
+        "android_client_info": {
+          "package_name": "com.ultraplex.lecturernotificationsystem"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "569447044766-cp9nrq8rscqjgd4ovca8ngim2a7a5ptl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZOX37aKJYBnEsfwxJlV9-c5VB8ipE1Yo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "569447044766-cp9nrq8rscqjgd4ovca8ngim2a7a5ptl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
