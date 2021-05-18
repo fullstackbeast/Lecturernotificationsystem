@@ -3,6 +3,7 @@ package com.ultraplex.lecturernotificationsystem;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -54,7 +55,7 @@ public class LoginActivity extends AppCompatActivity {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
                                     if(document.getString("Password").equals(inputPassword)){
                                         Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-                                        switchToDashboard(document.getString("Type"));
+                                        switchToDashboard(document.getString("Type").toLowerCase());
                                     }
                                     else Toast.makeText(LoginActivity.this, "Invalid Password", Toast.LENGTH_SHORT).show();
                                 }
@@ -69,11 +70,13 @@ public class LoginActivity extends AppCompatActivity {
 
     private void switchToDashboard(String staffType){
         switch (staffType){
-            case "Admin":
-                Toast.makeText(LoginActivity.this, "Logging in as admin", Toast.LENGTH_SHORT).show();
+            case "admin":
+                Intent adminIntent = new Intent(LoginActivity.this, AdminDashboardActivity.class);
+                startActivity(adminIntent);
                 break;
-            case "Lecturer":
-                Toast.makeText(LoginActivity.this, "Logging in as lecturer", Toast.LENGTH_SHORT).show();
+            case "lecturer":
+                Intent lecturerIntent = new Intent(LoginActivity.this, LecturerDashboardActivity.class);
+                startActivity(lecturerIntent);
                 break;
             default:
                 Toast.makeText(LoginActivity.this, "Error signing you in", Toast.LENGTH_SHORT).show();
