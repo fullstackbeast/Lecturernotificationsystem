@@ -223,4 +223,5 @@ public class DepartmentFragment extends Fragment {
         dialog.show();
         dialog.getWindow().setAttributes(lp);
     }
+
 }
