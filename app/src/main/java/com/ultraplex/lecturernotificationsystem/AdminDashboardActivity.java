@@ -87,6 +87,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 transaction.replace(R.id.main_content, LevelFragment.class, null);
                 break;
             case "Lecturers":
+                transaction.replace(R.id.main_content, LecturerFragment.class, null);
                 break;
             case "Courses":
                 break;

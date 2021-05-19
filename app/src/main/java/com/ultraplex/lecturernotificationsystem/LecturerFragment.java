@@ -2,6 +2,12 @@ package com.ultraplex.lecturernotificationsystem;
 
 import android.app.Dialog;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,11 +17,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -33,9 +34,10 @@ import java.util.Map;
 import java.util.Random;
 
 
-public class LevelFragment extends Fragment {
+public class LecturerFragment extends Fragment {
 
-    Button btnAddNewLevel;
+    Button btnAddNewLecturer;
+
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     ArrayList<GeneralListItem> listItems = new ArrayList<>();
@@ -46,43 +48,40 @@ public class LevelFragment extends Fragment {
 
     RecyclerView.LayoutManager mLayoutManager;
 
-    public LevelFragment() {
+    public LecturerFragment() {
         // Required empty public constructor
     }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_level, container, false);
-        btnAddNewLevel = (Button) view.findViewById(R.id.btn_add_new_level);
+        View view = inflater.inflate(R.layout.fragment_lecturer, container, false);
 
-        configureRecyclerView(view);
+        btnAddNewLecturer = (Button) view.findViewById(R.id.btn_add_new_lecturer);
 
-        btnAddNewLevel.setOnClickListener(new View.OnClickListener() {
+        btnAddNewLecturer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getContext(), "Adding level", Toast.LENGTH_SHORT).show();
-                addNewLevel();
+                addNewLecturer();
             }
         });
 
-        getAllLevels();
+
+        configureRecyclerView(view);
+
+        getAllLecturers();
 
         return view;
     }
 
-    private void addNewLevel() {
-        showCustomDialog();
-    }
-
     private void configureRecyclerView(View view) {
-        mRecyclerView = view.findViewById(R.id.recview_level);
+        mRecyclerView = view.findViewById(R.id.recview_lecturer);
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerAdapter = new GeneralListAdapter(listItems);
@@ -97,54 +96,36 @@ public class LevelFragment extends Fragment {
 
             @Override
             public void onDeleteClick(int position) {
-                Toast.makeText(getContext(), "Deleting" + listItems.get(position).getmText(), Toast.LENGTH_SHORT).show();
-                deleteLevel(position);
+                Toast.makeText(getContext(), "Deleting " + listItems.get(position).getmText(), Toast.LENGTH_SHORT).show();
+                deleteLecturer(position);
             }
         });
     }
 
-    private void deleteLevel(int position) {
-        String levelText = listItems.get(position).getmText();
+    private void addNewLecturer() {
+        showCustomDialog();
+    }
 
-        db.collection("levels").whereEqualTo("Name", levelText).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-
-                    if (task.getResult().size() < 1)
-                        Toast.makeText(getContext(), "An error occurred", Toast.LENGTH_SHORT).show();
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        document.getReference().delete();
-                        listItems.remove(position);
-                        mRecyclerAdapter.notifyItemRemoved(position);
-                        Toast.makeText(getContext(), levelText + " deleted successfully", Toast.LENGTH_SHORT).show();
-
-                    }
-                } else {
-                    Toast.makeText(getContext(), "An error occurred", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+    private void deleteLecturer(int position) {
 
     }
 
-    private void getAllLevels() {
-        db.collection("levels").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+
+    private void getAllLecturers() {
+        db.collection("users").whereEqualTo("Type", "lecturer") .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
-
                     for (QueryDocumentSnapshot document : task.getResult()) {
-                        Log.v("GetLevels", document.getString("Name"));
-                        listItems.add(new GeneralListItem(document.getString("Name")));
+                        Log.v("GetLecturer", document.getString("Firstname"));
+                        listItems.add(new GeneralListItem(document.getString("Firstname") + " " + document.getString("Lastname")));
                         mRecyclerAdapter.notifyItemInserted(listItems.size());
                     }
 
 
-                } else Log.w("GetLevels", "Error getting documents.", task.getException());
+                } else Log.w("GetLecturer", "Error getting documents.", task.getException());
             }
         });
-
 
     }
 
@@ -153,7 +134,7 @@ public class LevelFragment extends Fragment {
         Random random = new Random();
 
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE); // before
-        dialog.setContentView(R.layout.dialog_add_level);
+        dialog.setContentView(R.layout.dialog_add_lecturer);
         dialog.setCancelable(true);
 
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
@@ -161,7 +142,10 @@ public class LevelFragment extends Fragment {
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
-        final TextInputEditText editText_levelName = dialog.findViewById(R.id.level_name);
+//      input fields
+        final TextInputEditText editText_lecturer_firstName = dialog.findViewById(R.id.lecturer_firstname);
+        final TextInputEditText editText_lecturer_lastName = dialog.findViewById(R.id.lecturer_lastname);
+        final TextInputEditText editText_lecturer_staffId = dialog.findViewById(R.id.lecturer_staffId);
 
 
         ((ImageButton) dialog.findViewById(R.id.bt_close)).setOnClickListener(new View.OnClickListener() {
@@ -174,30 +158,32 @@ public class LevelFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
+                Map<String, Object> lecturer = new HashMap<>();
 
-                Toast.makeText(getContext(), editText_levelName.getText(), Toast.LENGTH_SHORT).show();
-
-                Map<String, Object> levels = new HashMap<>();
                 String firstString = String.valueOf(random.nextInt(1000));
                 String secondString = String.valueOf(random.nextInt(1000));
 
-                levels.put("Id", firstString + secondString);
-                levels.put("Name", editText_levelName.getText().toString().toLowerCase());
+                lecturer.put("Id", firstString + secondString);
+                lecturer.put("Firstname", editText_lecturer_firstName.getText().toString().toLowerCase());
+                lecturer.put("Lastname", editText_lecturer_lastName.getText().toString().toLowerCase());
+                lecturer.put("Staffid", editText_lecturer_staffId.getText().toString().toLowerCase());
+                lecturer.put("Password", editText_lecturer_lastName.getText().toString().toUpperCase());
+                lecturer.put("Type", "lecturer");
 
-                db.collection("levels")
-                        .add(levels)
+                db.collection("users")
+                        .add(lecturer)
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                             @Override
                             public void onSuccess(DocumentReference documentReference) {
-                                Log.d("LevelAdd", editText_levelName.getText().toString() + " added successfully ");
-                                listItems.add(new GeneralListItem(editText_levelName.getText().toString()));
+                                Log.d("LecturerAdd", editText_lecturer_firstName.getText().toString() + " added successfully ");
+                                listItems.add(new GeneralListItem(editText_lecturer_firstName.getText().toString() + " " +editText_lecturer_lastName.getText().toString() ));
                                 mRecyclerAdapter.notifyItemInserted(listItems.size());
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                Log.w("LevelAdd", "Error adding document", e);
+                                Log.w("LecturerAdd", "Error adding document", e);
                             }
                         });
 
