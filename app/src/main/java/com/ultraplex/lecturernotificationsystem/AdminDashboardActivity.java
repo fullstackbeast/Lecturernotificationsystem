@@ -80,6 +80,9 @@ public class AdminDashboardActivity extends AppCompatActivity {
             case "Home":
                 transaction.replace(R.id.main_content, HomeFragment.class, null);
                 break;
+            case "Departments":
+                transaction.replace(R.id.main_content, DepartmentFragment.class, null);
+                break;
             case "Levels":
                 transaction.replace(R.id.main_content, LevelFragment.class, null);
                 break;
