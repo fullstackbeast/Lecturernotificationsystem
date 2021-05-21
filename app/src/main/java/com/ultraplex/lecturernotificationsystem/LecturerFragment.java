@@ -107,7 +107,28 @@ public class LecturerFragment extends Fragment {
     }
 
     private void deleteLecturer(int position) {
+        String lecturerFullName = listItems.get(position).getmText();
 
+        String lastName = lecturerFullName.split(" ")[1].trim();
+
+        db.collection("users").whereEqualTo("Lastname", lastName.toLowerCase()).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    if (task.getResult().size() < 1)
+                        Toast.makeText(getContext(), "An error occurred", Toast.LENGTH_SHORT).show();
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        document.getReference().delete();
+                        listItems.remove(position);
+                        mRecyclerAdapter.notifyItemRemoved(position);
+                        Toast.makeText(getContext(), lecturerFullName + " deleted successfully", Toast.LENGTH_SHORT).show();
+
+                    }
+                } else {
+                    Toast.makeText(getContext(), "An error occurred 22", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
 
@@ -117,7 +138,6 @@ public class LecturerFragment extends Fragment {
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
                     for (QueryDocumentSnapshot document : task.getResult()) {
-                        Log.v("GetLecturer", document.getString("Firstname"));
                         listItems.add(new GeneralListItem(document.getString("Firstname") + " " + document.getString("Lastname")));
                         mRecyclerAdapter.notifyItemInserted(listItems.size());
                     }

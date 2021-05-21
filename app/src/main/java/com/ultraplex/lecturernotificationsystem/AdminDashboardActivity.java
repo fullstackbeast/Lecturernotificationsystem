@@ -90,6 +90,10 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 transaction.replace(R.id.main_content, LecturerFragment.class, null);
                 break;
             case "Courses":
+                transaction.replace(R.id.main_content, CourseFragment.class, null);
+                break;
+            case "Timetable":
+                transaction.replace(R.id.main_content, CourseFragment.class, null);
                 break;
             default:
                 break;

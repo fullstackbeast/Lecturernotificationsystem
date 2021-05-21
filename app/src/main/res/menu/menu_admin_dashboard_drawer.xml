@@ -26,6 +26,10 @@
             android:id="@+id/nav_courses"
             android:icon="@drawable/ic_courses"
             android:title="Courses" />
+        <item
+            android:id="@+id/nav_create_timetable"
+            android:icon="@drawable/ic_timetable"
+            android:title="Timetable" />
     </group>
     <group
         android:id="@+id/grp_2"
