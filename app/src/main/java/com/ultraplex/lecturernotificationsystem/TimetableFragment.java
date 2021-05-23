@@ -22,11 +22,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -53,11 +50,15 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
     ArrayList<Level> levels = new ArrayList<>();
     String[] levelNames;
 
-    String [] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    ArrayList<Level> courses = new ArrayList<>();
+    String[] courseTitles;
+
+    String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
     ArrayAdapter dayAdapter;
     ArrayAdapter deptNameAdapter;
     ArrayAdapter levelAdapter;
+    ArrayAdapter courseAdapter;
 
 
     public TimetableFragment() {
@@ -128,6 +129,29 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
                     levelAdapter = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, levelNames);
                     levelAdapter.notifyDataSetChanged();
                     levelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    getCourses();
+                } else {
+
+                }
+            }
+        });
+    }
+
+    private void getCourses(){
+        db.collection("courses").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    courseTitles = new String[task.getResult().size()];
+                    int i = 0;
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        courses.add(new Level(document.getString("Id"), document.getString("Title")));
+                        courseTitles[i] = document.getString("Title");
+                        i++;
+                    }
+                    courseAdapter = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, courseTitles);
+                    courseAdapter.notifyDataSetChanged();
+                    courseAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                     showCustomDialog();
                 } else {
 
@@ -136,23 +160,16 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
         });
     }
 
-    private void setTimePickerListener(Dialog dialogView) {
-        (dialogView.findViewById(R.id.btn_time_picker)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialogTimePickerLight(dialogView);
-            }
-        });
-    }
-
-    private void dialogTimePickerLight(Dialog dialogView) {
+    private void showTimePicker(View rootView, String type) {
         Calendar cur_calender = Calendar.getInstance();
         TimePickerDialog datePicker = TimePickerDialog.newInstance(new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePickerDialog view, int hourOfDay, int minute, int second) {
-//                ((TextView) dialogView.findViewById(R.id.result)).setText(hourOfDay + " : " + minute);
-                Log.v("Timepicker", "Hour of the day: " + hourOfDay);
-                Log.v("Timepicker", "Minute: " + minute);
+                if (type.equals("Start")) {
+                    ((TextInputEditText) rootView.findViewById(R.id.editText_add_timetable_starttime)).setText(hourOfDay + " : " + minute);
+                } else if (type.equals("Stop")) {
+                    ((TextInputEditText) rootView.findViewById(R.id.editText_add_timetable_stoptime)).setText(hourOfDay + " : " + minute);
+                }
             }
         }, cur_calender.get(Calendar.HOUR_OF_DAY), cur_calender.get(Calendar.MINUTE), false);
         //set dark light
@@ -160,6 +177,7 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
         datePicker.setAccentColor(getResources().getColor(R.color.colorPrimary));
         datePicker.show(getFragmentManager(), "Timepickerdialog");
     }
+
 
     private boolean isValidTimes(int startHour, int startMinute, int stopHour, int stopMinute) {
         return false;
@@ -179,20 +197,23 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
-        setTimePickerListener(dialog);
 
-        dayAdapter =  new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, days);
+        dayAdapter = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, days);
 
         Spinner daySpinner = dialog.findViewById(R.id.spinner_timetable_days);
         Spinner deptSpinner = dialog.findViewById(R.id.spinner_timetable_dept);
         Spinner levelSpinner = dialog.findViewById(R.id.spinner_timetable_level);
+        Spinner courseSpinner = dialog.findViewById(R.id.spinner_timetable_add_courses);
 
         daySpinner.setOnItemSelectedListener(this);
         deptSpinner.setOnItemSelectedListener(this);
         levelSpinner.setOnItemSelectedListener(this);
+        courseSpinner.setOnItemSelectedListener(this);
+
 
         deptSpinner.setAdapter(deptNameAdapter);
         levelSpinner.setAdapter(levelAdapter);
+        courseSpinner.setAdapter(courseAdapter);
 
         dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         daySpinner.setAdapter(dayAdapter);
@@ -204,21 +225,27 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
 
         final Button btnAddNewField = dialog.findViewById(R.id.btn_add_timetable_field);
 
+        configureDialogTimePickers(linearFieldsContainer);
+
         btnAddNewField.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getContext(), "Adding new field", Toast.LENGTH_SHORT).show();
 
-//                TextInputEditText newField = new TextInputEditText(getContext());
-//                newField.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-//                        LinearLayout.LayoutParams.WRAP_CONTENT));
+                View courseFields = LayoutInflater.from(getContext()).inflate(R.layout.timetable_fields, null, false);
+                courseFields.setTag("Field_" + linearFieldsContainer.getChildCount());
 
-                View courseField = LayoutInflater.from(getContext()).inflate(R.layout.timetable_fields, null, false);
-                courseField.setTag("Field_" + linearFieldsContainer.getChildCount());
+                Spinner newCourseSpinner = courseFields.findViewById(R.id.spinner_timetable_add_courses);
+                newCourseSpinner.setOnItemSelectedListener(new TimetableFragment());
+                newCourseSpinner.setAdapter(courseAdapter);
 
-                linearFieldsContainer.addView(courseField);
+                linearFieldsContainer.addView(courseFields);
 
-                Log.v("Tagly", courseField.getTag().toString());
+                ((TextView) courseFields.findViewById(R.id.txt_add_timetable_courseno)).setText("Course "+ linearFieldsContainer.getChildCount());
+
+                configureDialogTimePickers(linearFieldsContainer);
+
+                Log.v("Tagly", courseFields.getTag().toString());
             }
         });
 
@@ -232,13 +259,12 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
             @Override
             public void onClick(View v) {
 
-                Map<String, Object> lecturer = new HashMap<>();
+                Map<String, Object> timetable = new HashMap<>();
 
                 String firstString = String.valueOf(random.nextInt(1000));
                 String secondString = String.valueOf(random.nextInt(1000));
 
-                lecturer.put("Id", firstString + secondString);
-
+                timetable.put("Id", firstString + secondString);
 
                 dialog.dismiss();
             }
@@ -246,6 +272,27 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
 
         dialog.show();
         dialog.getWindow().setAttributes(lp);
+    }
+
+    private void configureDialogTimePickers(LinearLayout fieldContainer) {
+
+        for (int i = 0; i < fieldContainer.getChildCount(); i++) {
+            View currentFieldView = fieldContainer.getChildAt(i);
+
+            Button btnStartTime = currentFieldView.findViewById(R.id.btn_add_timetable_starttime);
+            Button btnStopTime = currentFieldView.findViewById(R.id.btn_add_timetable_stoptime);
+
+            btnStartTime.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Showing Start Time Dialog", Toast.LENGTH_SHORT).show();
+                showTimePicker(currentFieldView, "Start");
+            });
+
+            btnStopTime.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Showing Stop Time Dialog", Toast.LENGTH_SHORT).show();
+                showTimePicker(currentFieldView, "Stop");
+            });
+        }
+
     }
 
     @Override

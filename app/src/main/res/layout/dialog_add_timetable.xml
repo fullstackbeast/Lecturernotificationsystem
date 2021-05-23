@@ -69,6 +69,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create"/>
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -104,13 +109,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Add new field" />
-            <Button
-                android:id="@+id/btn_time_picker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Time Picker" />
+                android:text="Add New Course" />
 
         </LinearLayout>
 
