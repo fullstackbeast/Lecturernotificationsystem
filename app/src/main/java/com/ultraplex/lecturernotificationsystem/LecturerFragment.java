@@ -122,7 +122,6 @@ public class LecturerFragment extends Fragment {
                         listItems.remove(position);
                         mRecyclerAdapter.notifyItemRemoved(position);
                         Toast.makeText(getContext(), lecturerFullName + " deleted successfully", Toast.LENGTH_SHORT).show();
-
                     }
                 } else {
                     Toast.makeText(getContext(), "An error occurred 22", Toast.LENGTH_SHORT).show();
@@ -141,8 +140,6 @@ public class LecturerFragment extends Fragment {
                         listItems.add(new GeneralListItem(document.getString("Firstname") + " " + document.getString("Lastname")));
                         mRecyclerAdapter.notifyItemInserted(listItems.size());
                     }
-
-
                 } else Log.w("GetLecturer", "Error getting documents.", task.getException());
             }
         });
@@ -166,7 +163,6 @@ public class LecturerFragment extends Fragment {
         final TextInputEditText editText_lecturer_firstName = dialog.findViewById(R.id.lecturer_firstname);
         final TextInputEditText editText_lecturer_lastName = dialog.findViewById(R.id.lecturer_lastname);
         final TextInputEditText editText_lecturer_staffId = dialog.findViewById(R.id.lecturer_staffId);
-
 
         ((ImageButton) dialog.findViewById(R.id.bt_close)).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,7 +202,6 @@ public class LecturerFragment extends Fragment {
                                 Log.w("LecturerAdd", "Error adding document", e);
                             }
                         });
-
 
                 dialog.dismiss();
             }

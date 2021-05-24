@@ -43,7 +43,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
         actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
-        actionBar.setTitle("Drawer Simple Light");
+        actionBar.setTitle("Home");
     }
 
     private void initNavigationMenu() {
@@ -67,8 +67,6 @@ public class AdminDashboardActivity extends AppCompatActivity {
             }
         });
     }
-
-
 
     private void setPageMainContent(String pageTitle) {
         FragmentManager fragmentManager = getSupportFragmentManager();

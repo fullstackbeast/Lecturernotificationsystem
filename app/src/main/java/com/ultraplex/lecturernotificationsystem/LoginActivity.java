@@ -42,40 +42,43 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                String inputStaffId = EditText_StaffId.getText().toString().trim();
+                String inputStaffId = EditText_StaffId.getText().toString().toLowerCase().trim();
                 String inputPassword = EditText_Password.getText().toString().trim();
 
                 db.collection("users").whereEqualTo("Staffid", inputStaffId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            if(task.getResult().size() < 1) Toast.makeText(LoginActivity.this, "Invalid Staff Id", Toast.LENGTH_SHORT).show();
+                            if (task.getResult().size() < 1)
+                                Toast.makeText(LoginActivity.this, "Invalid Staff Id", Toast.LENGTH_SHORT).show();
 
-                            else{
+                            else {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    if(document.getString("Password").equals(inputPassword)){
+                                    if (document.getString("Password").equals(inputPassword)) {
                                         Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-                                        switchToDashboard(document.getString("Type").toLowerCase());
-                                    }
-                                    else Toast.makeText(LoginActivity.this, "Invalid Password", Toast.LENGTH_SHORT).show();
+                                        switchToDashboard(document.getString("Type").toLowerCase(), document.getString("Id").toLowerCase());
+                                    } else
+                                        Toast.makeText(LoginActivity.this, "Invalid Password", Toast.LENGTH_SHORT).show();
                                 }
 
                             }
-                        } else Log.w("LoginActivity", "Error getting documents.", task.getException());
+                        } else
+                            Log.w("LoginActivity", "Error getting documents.", task.getException());
                     }
                 });
             }
         });
     }
 
-    private void switchToDashboard(String staffType){
-        switch (staffType){
+    private void switchToDashboard(String staffType, String staffId) {
+        switch (staffType) {
             case "admin":
                 Intent adminIntent = new Intent(LoginActivity.this, AdminDashboardActivity.class);
                 startActivity(adminIntent);
                 break;
             case "lecturer":
                 Intent lecturerIntent = new Intent(LoginActivity.this, LecturerDashboardActivity.class);
+                lecturerIntent.putExtra("staffId", staffId);
                 startActivity(lecturerIntent);
                 break;
             default:

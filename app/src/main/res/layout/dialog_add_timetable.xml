@@ -71,6 +71,7 @@
             android:layout_weight="1" />
 
         <Button
+            android:id="@+id/btn_add_timetable_startcreate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Create"/>
@@ -100,8 +101,6 @@
                 android:orientation="vertical"
                 android:padding="@dimen/spacing_large">
 
-                <include layout="@layout/timetable_fields"/>
-
             </LinearLayout>
 
             <Button
@@ -109,6 +108,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:visibility="gone"
                 android:text="Add New Course" />
 
         </LinearLayout>
