@@ -24,7 +24,9 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
 
     public interface OnItemClickListener {
         void onAlarmClick(int position);
+
         void onItemClick(int position);
+
         void onDeleteClick(int position);
     }
 
@@ -53,7 +55,7 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
             imgAlarmItem = itemView.findViewById(R.id.img_timetable_setalarm);
             imgDeleteItem = itemView.findViewById(R.id.img_timetable_delete);
 
-            if(isAlarm){
+            if (isAlarm) {
                 imgDeleteItem.setVisibility(View.GONE);
                 imgAlarmItem.setVisibility(View.VISIBLE);
             }
@@ -77,8 +79,13 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
                             listener.onAlarmClick(position);
-//                            Log.v("ttt", ImageViewCompat.getImageTintList(imgAlarmItem).toString());
-//                            ImageViewCompat.setImageTintList(imgAlarmItem, ColorStateList.valueOf(R.color.black));
+                            if (imgAlarmItem.getTag(R.string.isAlarmed) == null) {
+                                ImageViewCompat.setImageTintList(imgAlarmItem, ColorStateList.valueOf(R.color.black));
+                                imgAlarmItem.setTag(R.string.isAlarmed, "alarmed");
+                            } else {
+                                ImageViewCompat.setImageTintList(imgAlarmItem, null);
+                                imgAlarmItem.setTag(R.string.isAlarmed, null);
+                            }
                         }
                     }
                 }
@@ -102,6 +109,7 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
     public TimetableListAdapter(ArrayList<TimetableListItem> listItems) {
         mListItems = listItems;
     }
+
     public TimetableListAdapter(ArrayList<TimetableListItem> listItems, boolean isAlarm) {
         mListItems = listItems;
         mIsAlarm = isAlarm;
