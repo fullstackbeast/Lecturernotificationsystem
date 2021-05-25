@@ -90,7 +90,6 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
         View view = inflater.inflate(R.layout.fragment_timetable, container, false);
 
         Spinner spinnerDays = view.findViewById(R.id.spinner_timetable_show_days);
-
         Spinner spinnerDept = view.findViewById(R.id.spinner_timetable_show_dept);
         Spinner spinnerLevel = view.findViewById(R.id.spinner_timetable_show_level);
 
@@ -215,8 +214,8 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
                                 }
                                 recylerListItems.add(new TimetableListItem(
                                         document.getString("Id"),
-                                        convertTo12Hr(document.getString("StartTime")),
-                                        convertTo12Hr(document.getString("StopTime")),
+                                        StringUtils.convertTo12Hr(document.getString("StartTime")),
+                                        StringUtils.convertTo12Hr(document.getString("StopTime")),
                                         currentCourse.getTitle(),
                                         currentCourse.getCode(),
                                         currentLevel.getName()
@@ -237,7 +236,7 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
                     int i = 0;
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         departments.add(new Department(document.getString("Id"), document.getString("Name")));
-                        departmentNames[i] = document.getString("Name");
+                        departmentNames[i] = StringUtils.capitalizeText(document.getString("Name"));
                         i++;
                     }
                     deptNameAdapter = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, departmentNames);
@@ -258,7 +257,7 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
                     int i = 0;
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         levels.add(new Level(document.getString("Id"), document.getString("Name")));
-                        levelNames[i] = document.getString("Name");
+                        levelNames[i] = StringUtils.capitalizeText(document.getString("Name"));
                         i++;
                     }
                     levelAdapter = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, levelNames);
@@ -464,27 +463,6 @@ public class TimetableFragment extends Fragment implements AdapterView.OnItemSel
         });
     }
 
-    private String convertTo12Hr(String time) {
-        String meridian = "AM";
-
-        String[] times = time.split(":");
-
-        String hour = times[0];
-        String minute = times[1];
-
-        if (Integer.parseInt(hour) > 12) {
-            meridian = "PM";
-            hour = String.valueOf(Integer.parseInt(hour) % 12);
-        }
-
-        if (Integer.parseInt(hour) == 12 && Integer.parseInt(minute) > 0) meridian = "PM";
-
-        if (hour.length() == 1) hour = "0" + hour;
-
-        if (minute.length() == 1) minute = "0" + minute;
-
-        return (hour + ":" + minute + " " + meridian);
-    }
 
     private void configureDialogTimePickers(LinearLayout fieldContainer) {
 

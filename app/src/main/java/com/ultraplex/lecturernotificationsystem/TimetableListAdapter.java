@@ -1,12 +1,16 @@
 package com.ultraplex.lecturernotificationsystem;
 
+import android.content.res.ColorStateList;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -14,6 +18,7 @@ import java.util.ArrayList;
 public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdapter.TimetableListViewHolder> {
 
     private ArrayList<TimetableListItem> mListItems;
+    private boolean mIsAlarm = false;
 
     private OnItemClickListener mListener;
 
@@ -37,7 +42,7 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
         public ImageView imgAlarmItem;
         public ImageView imgDeleteItem;
 
-        public TimetableListViewHolder(@NonNull View itemView, OnItemClickListener listener) {
+        public TimetableListViewHolder(@NonNull View itemView, OnItemClickListener listener, boolean isAlarm) {
             super(itemView);
 
             txtStartTime = itemView.findViewById(R.id.txt_timetable_starttime);
@@ -47,6 +52,11 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
             txtLevel = itemView.findViewById(R.id.txt_timetable_level);
             imgAlarmItem = itemView.findViewById(R.id.img_timetable_setalarm);
             imgDeleteItem = itemView.findViewById(R.id.img_timetable_delete);
+
+            if(isAlarm){
+                imgDeleteItem.setVisibility(View.GONE);
+                imgAlarmItem.setVisibility(View.VISIBLE);
+            }
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -67,6 +77,8 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
                             listener.onAlarmClick(position);
+//                            Log.v("ttt", ImageViewCompat.getImageTintList(imgAlarmItem).toString());
+//                            ImageViewCompat.setImageTintList(imgAlarmItem, ColorStateList.valueOf(R.color.black));
                         }
                     }
                 }
@@ -79,6 +91,7 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
                             listener.onDeleteClick(position);
+
                         }
                     }
                 }
@@ -89,13 +102,17 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
     public TimetableListAdapter(ArrayList<TimetableListItem> listItems) {
         mListItems = listItems;
     }
+    public TimetableListAdapter(ArrayList<TimetableListItem> listItems, boolean isAlarm) {
+        mListItems = listItems;
+        mIsAlarm = isAlarm;
+    }
 
     @NonNull
     @Override
     public TimetableListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.timetable_list_item, parent, false);
 
-        TimetableListViewHolder viewHolder = new TimetableListViewHolder(view, mListener);
+        TimetableListViewHolder viewHolder = new TimetableListViewHolder(view, mListener, mIsAlarm);
 
         return viewHolder;
     }

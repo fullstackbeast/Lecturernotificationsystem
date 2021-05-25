@@ -1,22 +1,89 @@
 package com.ultraplex.lecturernotificationsystem;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
-public class LecturerDashboardActivity extends AppCompatActivity {
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.ultraplex.lecturernotificationsystem.entities.Course;
+import com.ultraplex.lecturernotificationsystem.entities.Level;
+
+import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class LecturerDashboardActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    List<String> days = Arrays.asList(new String[]{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"});
+
+    ArrayAdapter dayAdapter;
+
+    RecyclerView mRecyclerView;
+    TimetableListAdapter mRecyclerAdapter;
+    RecyclerView.LayoutManager mLayoutManager;
+
+    ArrayList<TimetableListItem> recylerListItems = new ArrayList<>();
+
+    List<Course> lecturerCourses = new ArrayList<>();
+    List<String> courseIds = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lecturer_dashboard);
+
         initToolbar();
+
+        configureRecyclerView();
+
+        Spinner spinnerDays = findViewById(R.id.spinner_lecturer_days);
+
+        dayAdapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, days);
+        dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerDays.setOnItemSelectedListener(this);
+        spinnerDays.setAdapter(dayAdapter);
+
+        spinnerDays.setSelection(days.indexOf(getToday()));
+
+        getLecturerCourses();
+
+        Button btnFetchTimetable = findViewById(R.id.btn_lecturer_fetch_timetable);
+
+        btnFetchTimetable.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mRecyclerView.setVisibility(View.GONE);
+                recylerListItems.clear();
+                mRecyclerAdapter.notifyDataSetChanged();
+                getTimeTableByDayCourses(spinnerDays.getSelectedItem().toString());
+            }
+        });
     }
 
     private void initToolbar() {
@@ -26,14 +93,114 @@ public class LecturerDashboardActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(getIntent().getStringExtra("staffId"));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
 
-//        new Handler().postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                // open overflow menu
-//                ((Toolbar) findViewById(R.id.toolbar)).showOverflowMenu();
-//            }
-//        }, 1000);
+
+    private String getToday() {
+        Date date = Calendar.getInstance().getTime();
+        String day = StringUtils.capitalizeText(new SimpleDateFormat("EEEE", Locale.ENGLISH).format(date.getTime()));
+
+        if (days.indexOf(day) == -1) return "Monday";
+        return day;
+    }
+
+    private void getLecturerCourses() {
+        db.collection("courses")
+                .whereEqualTo("LecturerId", getIntent().getStringExtra("staffId"))
+                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    if (task.getResult().size() < 1)
+                        Toast.makeText(LecturerDashboardActivity.this, "No courses", Toast.LENGTH_SHORT).show();
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Course course = new Course(
+                                document.getString("Id"),
+                                document.getString("Code"),
+                                document.getString("Title"),
+                                document.getString("DepartmentId"),
+                                document.getString("LevelId"),
+                                document.getString("LecturerId")
+                        );
+
+                        lecturerCourses.add(course);
+                        courseIds.add(course.getId());
+                        Log.v("LecturersCourse", StringUtils.capitalizeText(document.getString("Title")));
+                    }
+                    getTimeTableByDayCourses(getToday());
+                }
+            }
+        });
+    }
+
+    private void getTimeTableByDayCourses(String day) {
+        db.collection("timetables")
+                .whereEqualTo("Day", day)
+                .whereIn("CourseId", courseIds).get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+
+                            if (task.getResult().size() < 1) {
+                                Toast.makeText(LecturerDashboardActivity.this, "No Timetable for the selected day.", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            mRecyclerView.setVisibility(View.VISIBLE);
+
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Course currentCourse = null;
+                                for (Course c : lecturerCourses) {
+                                    if (c.getId().equals(document.getString("CourseId"))) {
+                                        currentCourse = c;
+                                        break;
+                                    }
+                                }
+
+                                recylerListItems.add(new TimetableListItem(
+                                        document.getString("Id"),
+                                        StringUtils.convertTo12Hr(document.getString("StartTime")),
+                                        StringUtils.convertTo12Hr(document.getString("StopTime")),
+                                        StringUtils.capitalizeText(currentCourse.getTitle()),
+                                        currentCourse.getCode().toUpperCase(),
+                                        currentCourse.getLevelId()
+                                ));
+                                Log.v("recylerTest", document.getString("Id"));
+                                mRecyclerAdapter.notifyItemInserted(recylerListItems.size());
+                            }
+                        }
+                    }
+                });
+    }
+
+    private void configureRecyclerView() {
+        mRecyclerView = findViewById(R.id.recview_lecturer_timetable);
+        mRecyclerView.setHasFixedSize(true);
+        mLayoutManager = new LinearLayoutManager(LecturerDashboardActivity.this);
+        mRecyclerAdapter = new TimetableListAdapter(recylerListItems, true);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setAdapter(mRecyclerAdapter);
+
+
+        mRecyclerAdapter.setOnItemClickListener(new TimetableListAdapter.OnItemClickListener() {
+            @Override
+            public void onAlarmClick(int position) {
+                Toast.makeText(LecturerDashboardActivity.this, "Setting alarm for " + recylerListItems.get(position).getCourseTitle(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onItemClick(int position) {
+                Toast.makeText(LecturerDashboardActivity.this, recylerListItems.get(position).getCourseTitle(), Toast.LENGTH_SHORT).show();
+
+
+            }
+
+            @Override
+            public void onDeleteClick(int position) {
+
+            }
+        });
     }
 
     @Override
@@ -50,6 +217,16 @@ public class LecturerDashboardActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), item.getTitle() + " clicked", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 
 }

@@ -80,7 +80,7 @@ public class GeneralListAdapter extends RecyclerView.Adapter<GeneralListAdapter.
     @Override
     public void onBindViewHolder(@NonNull GeneralListViewHolder holder, int position) {
         GeneralListItem currentItem = mListItems.get(position);
-        holder.cardText.setText(currentItem.getmText());
+        holder.cardText.setText(StringUtils.capitalizeText(currentItem.getmText()));
     }
 
     @Override

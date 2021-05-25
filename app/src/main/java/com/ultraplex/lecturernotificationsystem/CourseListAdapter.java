@@ -86,7 +86,8 @@ public class CourseListAdapter extends RecyclerView.Adapter<CourseListAdapter.Co
     @Override
     public void onBindViewHolder(@NonNull CourseListViewHolder holder, int position) {
         CourseListItem currentItem = mCourseListItems.get(position);
-        holder.textCourseTitle.setText(currentItem.getTextCourseTitle());
+
+        holder.textCourseTitle.setText( StringUtils.capitalizeText(currentItem.getTextCourseTitle()));
         holder.textCourseDepartment.setText(currentItem.getTextCourseDepartment());
         holder.textCourseLecturer.setText(currentItem.getTextCourseLecturer());
         holder.textCourseCode.setText(currentItem.getTextCourseCode());
