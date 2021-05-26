@@ -42,6 +42,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class LecturerDashboardActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -72,8 +73,6 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
         sharedprefEditor = sharedPreferences.edit();
 
         initToolbar();
-
-        createNotificationChannel();
 
 
         configureRecyclerView();
@@ -109,7 +108,7 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(getIntent().getStringExtra("staffId"));
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(false);
     }
 
 
@@ -203,25 +202,36 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
         mRecyclerAdapter.setOnItemClickListener(new TimetableListAdapter.OnItemClickListener() {
             @Override
             public void onAlarmClick(int position) {
+                Random random = new Random();
+                PendingIntent testP;
                 Toast.makeText(LecturerDashboardActivity.this, "Setting alarm for " + recylerListItems.get(position).getCourseTitle(), Toast.LENGTH_SHORT).show();
 
-                Intent intent = new Intent(LecturerDashboardActivity.this, ReminderBroadcast.class);
+                String courseCode = recylerListItems.get(position).getCourseCode();
+                String id = recylerListItems.get(position).getId();
 
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(LecturerDashboardActivity.this, 0, intent, 0);
+                String message = "Time for " + courseCode + " in Computer Science";
+
+                Intent intent = new Intent(LecturerDashboardActivity.this, ReminderBroadcast.class);
+                intent.putExtra("message", message);
+
+                int reqCode = Integer.parseInt(id);
+
+                Log.v("Testmessage", message);
+
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(LecturerDashboardActivity.this, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
                 SharedPreferences sh = getSharedPreferences("TimetableSharedPref", MODE_PRIVATE);
 
-                boolean isSet = sh.getBoolean(recylerListItems.get(position).getId(), false);
+                boolean isSet = sh.getBoolean(id, false);
 
                 if (!isSet) {
-                    intent.putExtra("message", "Time for " + recylerListItems.get(position).getCourseCode() + " in Computer Science");
-                    setTimetableNotification(alarmManager, pendingIntent);
-                    sharedprefEditor.putBoolean(recylerListItems.get(position).getId(), true);
+                    setTimetableNotification(position, alarmManager, pendingIntent);
+                    sharedprefEditor.putBoolean(id, true);
                 } else {
                     cancelTimetableNotification(alarmManager, pendingIntent);
-                    sharedprefEditor.remove(recylerListItems.get(position).getId());
+                    sharedprefEditor.remove(id);
                 }
                 sharedprefEditor.commit();
             }
@@ -229,8 +239,6 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
             @Override
             public void onItemClick(int position) {
                 Toast.makeText(LecturerDashboardActivity.this, recylerListItems.get(position).getCourseTitle(), Toast.LENGTH_SHORT).show();
-
-
             }
 
             @Override
@@ -240,24 +248,14 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
         });
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "TimetableReminderChannel";
-            String description = "Channel for Timetable Reminder";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
 
-            NotificationChannel channel = new NotificationChannel("notifyTimetable", name, importance);
+    private void setTimetableNotification(int position, AlarmManager alarmManager, PendingIntent pendingIntent) {
 
-            channel.setDescription(description);
+        String startTime = recylerListItems.get(position).getStartTime();
 
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
+        String time = StringUtils.convertTo24Hr(startTime);
 
-    private void setTimetableNotification(AlarmManager alarmManager, PendingIntent pendingIntent) {
-
-//        StringUtils.NotificationString = "Time for " + recylerListItems.get(position).getCourseCode() + " in Computer Science";
+        Toast.makeText(this, time, Toast.LENGTH_SHORT).show();
 
         long timeAtButtonClick = System.currentTimeMillis();
 
@@ -267,7 +265,9 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
     }
 
     private void cancelTimetableNotification(AlarmManager alarmManager, PendingIntent pendingIntent) {
+
         alarmManager.cancel(pendingIntent);
+        pendingIntent.cancel();
     }
 
     @Override

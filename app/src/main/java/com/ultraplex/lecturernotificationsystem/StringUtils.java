@@ -2,18 +2,17 @@ package com.ultraplex.lecturernotificationsystem;
 
 public class StringUtils {
 
-    public static String NotificationString = "";
 
-    public static String capitalizeText(String text){
+    public static String capitalizeText(String text) {
 
         String capitalizedWord = "";
-        String [] words = text.split(" ");
+        String[] words = text.split(" ");
 
-        for (String word : words){
-            String firstLetter = word.substring(0,1);
+        for (String word : words) {
+            String firstLetter = word.substring(0, 1);
             firstLetter = firstLetter.toUpperCase();
-            String newWord = firstLetter+word.substring(1);
-            capitalizedWord = capitalizedWord + " "+newWord;
+            String newWord = firstLetter + word.substring(1);
+            capitalizedWord = capitalizedWord + " " + newWord;
         }
 
         return capitalizedWord.trim();
@@ -39,5 +38,19 @@ public class StringUtils {
         if (minute.length() == 1) minute = "0" + minute;
 
         return (hour + ":" + minute + " " + meridian);
+    }
+
+    public static String convertTo24Hr(String time) {
+        String[] timesWithMeridian = time.split(" ");
+
+        String[] times = timesWithMeridian[0].split(":");
+
+        String hour = times[0];
+        String minute = times[1];
+
+        if (timesWithMeridian[1].equals("PM")) hour = String.valueOf(Integer.parseInt(hour) + 12);
+
+
+        return (hour + ":" + minute);
     }
 }
