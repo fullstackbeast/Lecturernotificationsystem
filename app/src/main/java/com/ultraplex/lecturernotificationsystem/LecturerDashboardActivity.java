@@ -7,6 +7,13 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -53,12 +60,21 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
     List<Course> lecturerCourses = new ArrayList<>();
     List<String> courseIds = new ArrayList<>();
 
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor sharedprefEditor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lecturer_dashboard);
 
+        sharedPreferences = getSharedPreferences("TimetableSharedPref", MODE_PRIVATE);
+        sharedprefEditor = sharedPreferences.edit();
+
         initToolbar();
+
+        createNotificationChannel();
+
 
         configureRecyclerView();
 
@@ -81,6 +97,7 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
                 mRecyclerView.setVisibility(View.GONE);
                 recylerListItems.clear();
                 mRecyclerAdapter.notifyDataSetChanged();
+                mRecyclerView.setAdapter(mRecyclerAdapter);
                 getTimeTableByDayCourses(spinnerDays.getSelectedItem().toString());
             }
         });
@@ -178,7 +195,7 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
         mRecyclerView = findViewById(R.id.recview_lecturer_timetable);
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(LecturerDashboardActivity.this);
-        mRecyclerAdapter = new TimetableListAdapter(recylerListItems, true);
+        mRecyclerAdapter = new TimetableListAdapter(recylerListItems, true, LecturerDashboardActivity.this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mRecyclerAdapter);
 
@@ -187,6 +204,26 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
             @Override
             public void onAlarmClick(int position) {
                 Toast.makeText(LecturerDashboardActivity.this, "Setting alarm for " + recylerListItems.get(position).getCourseTitle(), Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(LecturerDashboardActivity.this, ReminderBroadcast.class);
+
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(LecturerDashboardActivity.this, 0, intent, 0);
+
+                AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+                SharedPreferences sh = getSharedPreferences("TimetableSharedPref", MODE_PRIVATE);
+
+                boolean isSet = sh.getBoolean(recylerListItems.get(position).getId(), false);
+
+                if (!isSet) {
+                    intent.putExtra("message", "Time for " + recylerListItems.get(position).getCourseCode() + " in Computer Science");
+                    setTimetableNotification(alarmManager, pendingIntent);
+                    sharedprefEditor.putBoolean(recylerListItems.get(position).getId(), true);
+                } else {
+                    cancelTimetableNotification(alarmManager, pendingIntent);
+                    sharedprefEditor.remove(recylerListItems.get(position).getId());
+                }
+                sharedprefEditor.commit();
             }
 
             @Override
@@ -201,6 +238,36 @@ public class LecturerDashboardActivity extends AppCompatActivity implements Adap
 
             }
         });
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "TimetableReminderChannel";
+            String description = "Channel for Timetable Reminder";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+
+            NotificationChannel channel = new NotificationChannel("notifyTimetable", name, importance);
+
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void setTimetableNotification(AlarmManager alarmManager, PendingIntent pendingIntent) {
+
+//        StringUtils.NotificationString = "Time for " + recylerListItems.get(position).getCourseCode() + " in Computer Science";
+
+        long timeAtButtonClick = System.currentTimeMillis();
+
+        long tenSeconds = 1000 * 10;
+
+        alarmManager.set(AlarmManager.RTC_WAKEUP, timeAtButtonClick + tenSeconds, pendingIntent);
+    }
+
+    private void cancelTimetableNotification(AlarmManager alarmManager, PendingIntent pendingIntent) {
+        alarmManager.cancel(pendingIntent);
     }
 
     @Override

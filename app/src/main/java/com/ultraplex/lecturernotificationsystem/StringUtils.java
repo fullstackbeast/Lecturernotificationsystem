@@ -2,6 +2,8 @@ package com.ultraplex.lecturernotificationsystem;
 
 public class StringUtils {
 
+    public static String NotificationString = "";
+
     public static String capitalizeText(String text){
 
         String capitalizedWord = "";

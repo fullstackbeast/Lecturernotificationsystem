@@ -1,5 +1,7 @@
 package com.ultraplex.lecturernotificationsystem;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +21,7 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
 
     private ArrayList<TimetableListItem> mListItems;
     private boolean mIsAlarm = false;
+    private Context mContext = null;
 
     private OnItemClickListener mListener;
 
@@ -79,6 +82,8 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
                             listener.onAlarmClick(position);
+
+
                             if (imgAlarmItem.getTag(R.string.isAlarmed) == null) {
                                 ImageViewCompat.setImageTintList(imgAlarmItem, ColorStateList.valueOf(R.color.black));
                                 imgAlarmItem.setTag(R.string.isAlarmed, "alarmed");
@@ -110,9 +115,10 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
         mListItems = listItems;
     }
 
-    public TimetableListAdapter(ArrayList<TimetableListItem> listItems, boolean isAlarm) {
+    public TimetableListAdapter(ArrayList<TimetableListItem> listItems, boolean isAlarm, Context context) {
         mListItems = listItems;
         mIsAlarm = isAlarm;
+        mContext = context;
     }
 
     @NonNull
@@ -134,6 +140,18 @@ public class TimetableListAdapter extends RecyclerView.Adapter<TimetableListAdap
         holder.txtCourseTitle.setText(currentItem.getCourseTitle());
         holder.txtCourseCode.setText(currentItem.getCourseCode());
         holder.txtLevel.setText(currentItem.getLevel());
+
+        if (mContext != null) {
+            SharedPreferences sh = mContext.getSharedPreferences("TimetableSharedPref", mContext.MODE_PRIVATE);
+            boolean isSet = sh.getBoolean(currentItem.getId(), false);
+
+            if (isSet) {
+                ImageViewCompat.setImageTintList(holder.imgAlarmItem, ColorStateList.valueOf(R.color.black));
+                holder.imgAlarmItem.setTag(R.string.isAlarmed, "alarmed");
+            }
+
+        }
+
     }
 
     @Override

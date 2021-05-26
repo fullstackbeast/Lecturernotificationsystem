@@ -21,6 +21,16 @@
         <activity android:name=".MainActivity">
 
         </activity>
+
+        <receiver
+            android:name=".ReminderBroadcast"
+            android:enabled="true"
+            android:process=":remote"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

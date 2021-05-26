@@ -1,6 +1,9 @@
 package com.ultraplex.lecturernotificationsystem;
 
 import android.app.Dialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -211,4 +214,5 @@ public class LecturerFragment extends Fragment {
         dialog.getWindow().setAttributes(lp);
 
     }
+
 }

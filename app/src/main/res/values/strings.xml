@@ -6,4 +6,6 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="isAlarmed">isAlarmed</string>
+
+    <string name="notificationText">Time for COM 215 in Computer Science</string>
 </resources>
